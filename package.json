@@ -1,0 +1,24 @@
+{
+  "name": "youtube-ass-player",
+  "version": "1.0.0",
+  "description": "Chrome extension for playing ASS subtitles on YouTube",
+  "scripts": {
+    "build": "npm run download-assjs && npm run copy-files",
+    "download-assjs": "curl -o assjs.min.js https://cdn.jsdelivr.net/npm/assjs@latest/dist/ass.min.js",
+    "copy-files": "echo 'Build complete'",
+    "dev": "npm run build && echo 'Development build ready'",
+    "package": "npm run build && zip -r youtube-ass-player.zip . -x 'node_modules/*' 'package*.json' '.git/*' '*.zip'"
+  },
+  "dependencies": {
+    "assjs": "^0.0.11"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "youtube",
+    "subtitle",
+    "ass",
+    "chrome-extension"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

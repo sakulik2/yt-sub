@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube ASS字幕播放器",
+  "version": "1.1.0",
+  "description": "为YouTube视频添加.ass字幕支持，支持本地字体渲染",
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "fontSettings"
+  ],
+  
+  "host_permissions": [
+    "https://*.youtube.com/*",
+    "https://cdn.jsdelivr.net/*"
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ASS字幕播放器"
+  },
+  
+  "content_scripts": [{
+    "matches": ["https://*.youtube.com/watch*"],
+    "js": ["content.js"],
+    "css": ["content.css"],
+    "run_at": "document_end"
+  }],
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "web_accessible_resources": [{
+    "resources": ["assjs.min.js"],
+    "matches": ["https://*.youtube.com/*"]
+  }],
+  
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

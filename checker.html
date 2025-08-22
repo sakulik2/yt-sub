@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASS.js库测试页面</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background: #fff3cd;
+            border-color: #ffeeba;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        #log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f8f9fa;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 ASS.js库测试页面</h1>
+        <p>这个页面用于测试ASS.js库是否能正确加载和工作。</p>
+        
+        <div id="browser-info" class="test-section">
+            <h3>📋 浏览器信息</h3>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+            <p><strong>Chrome版本:</strong> <span id="chromeVersion"></span></p>
+        </div>
+
+        <div id="library-test" class="test-section">
+            <h3>📚 库加载测试</h3>
+            <button onclick="testLocalLibrary()">测试本地库</button>
+            <button onclick="testCDNLibrary()">测试CDN库</button>
+            <button onclick="clearResults()">清除结果</button>
+            <div id="library-results"></div>
+        </div>
+
+        <div id="parsing-test" class="test-section">
+            <h3>📝 ASS解析测试</h3>
+            <button onclick="testASSParsing()">测试ASS解析</button>
+            <div id="parsing-results"></div>
+        </div>
+
+        <div id="video-test" class="test-section">
+            <h3>🎥 视频渲染测试</h3>
+            <video id="test-video" width="400" height="225" controls>
+                <source src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAr1tZGF0AAACrQYF//+c3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE2MSByMzAyMCA5OTdkNjBkIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAyMCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTI1IHNjZW5lY3V0PTQwIGludHJhX3JlZnJlc2g9MCByY19sb29rYWhlYWQ9NDAgcmM9Y3JmIG1idHJlZT0xIGNyZj0yMy4wIHFjb21wPTAuNjAgcXBtaW49MCBxcG1heD02OSBxcHN0ZXA9NCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAABWWWIhAA3//727L4FNf2f0JcRLMXaSnA+KqSAgHc0wAAAAwAAAwAAFgAABrBIQOdp" type="video/mp4">
+                您的浏览器不支持视频播放。
+            </video>
+            <div id="subtitle-container" style="position: relative; width: 400px; height: 225px; background: #000;"></div>
+            <button onclick="testVideoRendering()">测试视频字幕渲染</button>
+            <div id="video-results"></div>
+        </div>
+
+        <div id="log-section" class="test-section">
+            <h3>📋 测试日志</h3>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化页面
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        
+        const chromeMatch = navigator.userAgent.match(/Chrome\/(\d+)/);
+        document.getElementById('chromeVersion').textContent = chromeMatch ? chromeMatch[1] : '未知';
+
+        let logElement = document.getElementById('log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            logElement.textContent += logEntry;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function setResult(elementId, content, className) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = content;
+            element.className = `test-section ${className}`;
+        }
+
+        function clearResults() {
+            logElement.textContent = '';
+            document.getElementById('library-results').innerHTML = '';
+            document.getElementById('parsing-results').innerHTML = '';
+            document.getElementById('video-results').innerHTML = '';
+        }
+
+        // 测试本地库
+        function testLocalLibrary() {
+            log('开始测试本地ASS.js库...');
+            
+            if (typeof window.ASS !== 'undefined') {
+                log('本地ASS.js库已存在', 'success');
+                setResult('library-results', '✅ 本地库已加载且可用', 'success');
+                return;
+            }
+
+            log('尝试加载本地库...');
+            const script = document.createElement('script');
+            script.src = './assjs.min.js';
+            script.onload = () => {
+                if (typeof window.ASS !== 'undefined') {
+                    log('本地ASS.js库加载成功', 'success');
+                    setResult('library-results', '✅ 本地库加载成功', 'success');
+                } else {
+                    log('本地库加载后ASS对象仍未找到', 'error');
+                    setResult('library-results', '❌ 本地库加载失败（可能是ES6模块）', 'error');
+                }
+            };
+            script.onerror = () => {
+                log('本地库文件不存在或加载失败', 'error');
+                setResult('library-results', '❌ 本地库文件不存在', 'error');
+            };
+            document.head.appendChild(script);
+        }
+
+        // 测试CDN库
+        function testCDNLibrary() {
+            log('开始测试CDN ASS.js库...');
+            
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/assjs@latest/dist/ass.global.js';
+            script.onload = () => {
+                if (typeof window.ASS !== 'undefined') {
+                    log('CDN ASS.js库加载成功', 'success');
+                    setResult('library-results', '✅ CDN库加载成功', 'success');
+                } else {
+                    log('CDN库加载后ASS对象仍未找到', 'error');
+                    setResult('library-results', '❌ CDN库加载失败', 'error');
+                }
+            };
+            script.onerror = () => {
+                log('CDN库加载失败，请检查网络连接', 'error');
+                setResult('library-results', '❌ CDN库加载失败（网络问题）', 'error');
+            };
+            document.head.appendChild(script);
+        }
+
+        // 测试ASS解析
+        function testASSParsing() {
+            log('开始测试ASS解析功能...');
+            
+            if (typeof window.ASS === 'undefined') {
+                log('ASS库未加载，请先加载库', 'error');
+                setResult('parsing-results', '❌ 请先加载ASS.js库', 'error');
+                return;
+            }
+
+            const testASS = `[Script Info]
+Title: 测试字幕
+ScriptType: v4.00+
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Microsoft YaHei,20,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,这是一条测试字幕
+Dialogue: 0,0:00:04.00,0:00:06.00,Default,,0,0,0,,ASS库工作正常！`;
+
+            try {
+                log('尝试解析ASS内容...');
+                // 这里我们只是检查能否实例化，不实际渲染
+                const tempVideo = document.createElement('video');
+                const tempContainer = document.createElement('div');
+                
+                const instance = new window.ASS(testASS, tempVideo, {
+                    container: tempContainer
+                });
+                
+                log('ASS解析成功', 'success');
+                setResult('parsing-results', '✅ ASS解析功能正常', 'success');
+                
+                // 清理
+                instance.destroy();
+                
+            } catch (error) {
+                log(`ASS解析失败: ${error.message}`, 'error');
+                setResult('parsing-results', `❌ ASS解析失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试视频渲染
+        function testVideoRendering() {
+            log('开始测试视频字幕渲染...');
+            
+            if (typeof window.ASS === 'undefined') {
+                log('ASS库未加载，请先加载库', 'error');
+                setResult('video-results', '❌ 请先加载ASS.js库', 'error');
+                return;
+            }
+
+            const video = document.getElementById('test-video');
+            const container = document.getElementById('subtitle-container');
+            
+            const testASS = `[Script Info]
+Title: 视频测试字幕
+ScriptType: v4.00+
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Microsoft YaHei,16,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,10,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:01.00,0:00:05.00,Default,,0,0,0,,字幕渲染测试成功！
+Dialogue: 0,0:00:06.00,0:00:10.00,Default,,0,0,0,,ASS.js库工作正常`;
+
+            try {
+                // 清除之前的字幕
+                container.innerHTML = '';
+                
+                log('创建ASS实例...');
+                const assInstance = new window.ASS(testASS, video, {
+                    container: container
+                });
+                
+                log('视频字幕渲染成功', 'success');
+                setResult('video-results', '✅ 视频字幕渲染正常（播放视频查看效果）', 'success');
+                
+            } catch (error) {
+                log(`视频渲染失败: ${error.message}`, 'error');
+                setResult('video-results', `❌ 视频渲染失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载完成后的初始检查
+        window.addEventListener('load', () => {
+            log('页面加载完成，开始初始检查...');
+            
+            if (typeof window.ASS !== 'undefined') {
+                log('检测到ASS库已预加载', 'success');
+                setResult('library-results', '✅ ASS库已预加载', 'success');
+            } else {
+                log('ASS库未预加载，需要手动加载', 'warning');
+                setResult('library-results', '⚠️ ASS库未预加载，请点击按钮测试', 'warning');
+            }
+        });
+    </script>
+</body>
+</html>
