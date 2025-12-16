@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            width: 320px;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 14px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .section {
+            margin-bottom: 15px;
+        }
+        
+        .title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1a73e8;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding: 6px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background: #1a73e8;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        button:hover {
+            background: #1557b0;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .settings {
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        
+        .settings-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .settings-group.hidden {
+            display: none;
+        }
+        
+        .group-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 13px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+            margin-top: -6px;
+            margin-bottom: 10px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        input[type="color"] {
+            width: 100%;
+            height: 30px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            margin-bottom: 8px;
+        }
+        
+        .color-preview {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        
+        .subtitle-type-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        
+        .subtitle-type-indicator.ass {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .subtitle-type-indicator.srt {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <div class="title">
+            加载字幕文件
+            <span id="subtitleType" class="subtitle-type-indicator hidden"></span>
+        </div>
+        <input type="file" id="assFile" accept=".ass,.srt" />
+        <div class="controls">
+            <button id="loadBtn">加载字幕</button>
+            <button id="clearBtn">清除字幕</button>
+        </div>
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+    
+    <div class="settings">
+        <!-- 通用设置 -->
+        <div class="settings-group" id="commonSettings">
+            <div class="group-title">通用设置</div>
+            
+            <label for="fontSize">字体大小:</label>
+            <input type="range" id="fontSize" min="12" max="48" value="20" />
+            <div class="range-labels">
+                <span>12px</span>
+                <span>48px</span>
+            </div>
+            
+            <label for="opacity">透明度:</label>
+            <input type="range" id="opacity" min="0.3" max="1" step="0.1" value="1" />
+            <div class="range-labels">
+                <span>30%</span>
+                <span>100%</span>
+            </div>
+            
+            <label for="offsetY">垂直偏移:</label>
+            <input type="range" id="offsetY" min="-100" max="100" value="0" />
+            <div class="range-labels">
+                <span>-100px</span>
+                <span>+100px</span>
+            </div>
+        </div>
+
+        <!-- SRT专用设置 -->
+        <div class="settings-group hidden" id="srtSettings">
+            <div class="group-title">SRT字幕样式设置</div>
+            
+            <label for="srtFontFamily">字体:</label>
+            <select id="srtFontFamily">
+                <option value="Microsoft YaHei, SimHei, Arial, sans-serif">微软雅黑</option>
+                <option value="SimHei, Microsoft YaHei, Arial, sans-serif">黑体</option>
+                <option value="SimSun, Microsoft YaHei, Arial, sans-serif">宋体</option>
+                <option value="KaiTi, Microsoft YaHei, Arial, sans-serif">楷体</option>
+                <option value="Arial, Microsoft YaHei, sans-serif">Arial</option>
+                <option value="Helvetica, Microsoft YaHei, sans-serif">Helvetica</option>
+            </select>
+            
+            <label for="srtFontWeight">字体粗细:</label>
+            <select id="srtFontWeight">
+                <option value="normal">正常</option>
+                <option value="bold">加粗</option>
+                <option value="lighter">较细</option>
+                <option value="bolder">较粗</option>
+            </select>
+            
+            <label for="srtFontStyle">字体样式:</label>
+            <select id="srtFontStyle">
+                <option value="normal">正常</option>
+                <option value="italic">斜体</option>
+                <option value="oblique">倾斜</option>
+            </select>
+            
+            <label for="srtTextAlign">文本对齐:</label>
+            <select id="srtTextAlign">
+                <option value="center">居中</option>
+                <option value="left">左对齐</option>
+                <option value="right">右对齐</option>
+            </select>
+            
+            <label for="srtTextColor">文字颜色: <span class="color-preview" id="textColorPreview"></span></label>
+            <input type="color" id="srtTextColor" value="#ffffff" />
+            
+            <label for="srtOutlineColor">描边颜色: <span class="color-preview" id="outlineColorPreview"></span></label>
+            <input type="color" id="srtOutlineColor" value="#000000" />
+            
+            <label for="srtOutlineWidth">描边宽度:</label>
+            <input type="range" id="srtOutlineWidth" min="0" max="3" step="0.5" value="1" />
+            <div class="range-labels">
+                <span>无</span>
+                <span>3px</span>
+            </div>
+            
+            <label for="srtBackgroundColor">背景颜色: <span class="color-preview" id="backgroundColorPreview"></span></label>
+            <input type="color" id="srtBackgroundColor" value="#000000" />
+            
+            <label for="srtBackgroundOpacity">背景透明度:</label>
+            <input type="range" id="srtBackgroundOpacity" min="0" max="1" step="0.1" value="0.7" />
+            <div class="range-labels">
+                <span>透明</span>
+                <span>不透明</span>
+            </div>
+            
+            <label for="srtLineHeight">行高:</label>
+            <input type="range" id="srtLineHeight" min="1" max="2" step="0.1" value="1.2" />
+            <div class="range-labels">
+                <span>1.0</span>
+                <span>2.0</span>
+            </div>
+            
+            <label for="srtPadding">内边距:</label>
+            <input type="range" id="srtPadding" min="0" max="20" value="8" />
+            <div class="range-labels">
+                <span>0px</span>
+                <span>20px</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# --- 🔒 安全隐患 (绝对不能上传) ---
+*.pem
+id_rsa
+secrets.py
+
+# --- 📦 构建产物 (不需要上传) ---
+*.crx
+*.zip
+*.xpi
+
+# --- 🐍 Python 缓存 ---
+__pycache__/
+*.py[cod]
+
+# --- 🔧 系统/编辑器垃圾文件 ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- 📂 备份文件夹 (看你截图里有个 yt-sub 文件夹) ---
+# 如果 yt-sub 是你的旧备份，建议忽略它，只传当前目录的代码
+yt-sub/
+yt-sub-build/
