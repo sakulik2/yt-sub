@@ -20,9 +20,9 @@ process.stdin.on('end', () => {
 
     if (!filePath || path.extname(filePath) !== '.js') process.exit(0);
 
-    // ass-loader.js / assjs.min.js 是 vendored 生成产物，不检查
+    // ass-loader.js 是 vendored 生成产物，不检查
     const base = path.basename(filePath);
-    if (base === 'ass-loader.js' || base === 'assjs.min.js') process.exit(0);
+    if (base === 'ass-loader.js') process.exit(0);
 
     // 文件不存在（已删除、或路径无法解析）时静默放过，避免把 MODULE_NOT_FOUND 当成语法错误
     if (!fs.existsSync(filePath)) process.exit(0);

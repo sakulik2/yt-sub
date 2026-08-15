@@ -16,7 +16,7 @@ npm run check && npm run lint
 如果本次改动碰了 Python 文件，追加：
 
 ```bash
-python -m py_compile build.py fix_ass.py
+python -m py_compile build.py
 ```
 
 有报错先修掉再继续。不要跳过这一步直接写手测清单。

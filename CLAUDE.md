@@ -12,7 +12,7 @@ Chrome Manifest V3 扩展，给 YouTube 视频叠加 ASS/SRT 字幕。**扩展�
 
 1. `npm run check`（等价于对三个手写 JS 跑 `node --check`）
 2. `npm run lint`（ESLint，抓未定义变量、笔误的 chrome API 名、未使用变量）
-3. `python -m py_compile build.py fix_ass.py`（改动 Python 时）
+3. `python -m py_compile build.py`（改动 Python 时）
 4. 语法检查和 lint 只能证明代码能解析且无静态错误，**不能证明行为正确**。浏览器行为无法自动验证，所以每次改动后要列出具体的手测步骤和预期结果，交给用户在 chrome://extensions 重新加载扩展后在 YouTube 观看页验证。不要声称已验证运行时行为。
 
 手测清单覆盖：ASS 加载、SRT 加载、清除字幕、连续切换多个视频、全屏切换、设置持久化、控制台无报错。
@@ -28,7 +28,7 @@ Chrome Manifest V3 扩展，给 YouTube 视频叠加 ASS/SRT 字幕。**扩展�
 
 - `ass-loader.js` 是 `build.py` 下载 assjs 非压缩版后打补丁生成的 vendored 产物，**不要手工编辑**；需要更新时跑 `python build.py`（需联网，会覆盖文件，改动要审查 diff）。
 - assjs 的 `resize` 是私有字段 `#resize`，实例上没有公开 `resize()`。库在构造时自己装了 `ResizeObserver`，尺寸变化已有人管。
-- `assjs.min.js`、`fix_ass.py`、`content.css` 目前没有调用方（`content.css` 未被 manifest 加载，选择器也与实际容器 ID 不匹配）。
+- 手写的 JS 只有 `content.js` 和 `popup.js`。没有 background service worker —— MV3 不强制要求，且设了 `default_popup` 时 `action.onClicked` 永远不触发，所有逻辑都在 popup 和 content script 里。
 - `yt-sub/`、`yt-sub-build/` 是本地构建或备份输出，不是源码。
 - `issues.md` 是被 gitignore 的本地问题清单，记录了待修的 P0/P1/P2 项，改动前值得看一眼。
 

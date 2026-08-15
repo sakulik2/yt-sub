@@ -2,14 +2,15 @@
 
 ## Project Structure & Module Organization
 
-This repository is a dependency-free Chrome Manifest V3 extension. `manifest.json` defines permissions and entry points. `background.js` is the service worker; `content.js` injects subtitle playback into YouTube; and `popup.html`, `popup.js`, and `content.css` implement the extension UI. `ass-loader.js` and `assjs.min.js` are vendored, generated ASS.js assets. `build.py` and `fix_ass.py` download and patch those assets, while `build.sh` assembles an unpacked build. The ignored `yt-sub/` and `yt-sub-build/` directories are local build or backup output, not source.
+The extension itself ships no dependencies. `manifest.json` defines permissions and entry points. `content.js` injects subtitle playback into YouTube; `popup.html` and `popup.js` implement the extension UI. There is no background service worker — MV3 does not require one, and `action.onClicked` never fires while `default_popup` is set. `ass-loader.js` is a vendored, generated ASS.js asset that `build.py` downloads and patches, while `build.sh` assembles an unpacked build. `package.json` and `node_modules` exist only for ESLint and are never shipped. The ignored `yt-sub/` and `yt-sub-build/` directories are local build or backup output, not source.
 
 ## Build, Test, and Development Commands
 
 - Load the repository root through `chrome://extensions` using **Developer mode > Load unpacked** for local development.
-- Run `node --check background.js`, `node --check content.js`, and `node --check popup.js` for JavaScript syntax checks.
-- Run `python -m py_compile build.py fix_ass.py` to validate the Python utilities.
-- Run `python build.py` to refresh `ass-loader.js`, or `python fix_ass.py` to refresh `assjs.min.js`. Both require network access and overwrite vendored files; inspect their diffs.
+- Run `npm run check` for JavaScript syntax checks (`node --check` on `content.js` and `popup.js`).
+- Run `npm run lint` for ESLint. Requires `npm install` once; the dev dependencies are never shipped.
+- Run `python -m py_compile build.py` to validate the Python utility.
+- Run `python build.py` to refresh `ass-loader.js`. It requires network access and overwrites the vendored file; inspect the diff.
 - Run `bash build.sh` on a Unix-like shell to create `yt-sub-build/`.
 
 ## Coding Style & Naming Conventions
