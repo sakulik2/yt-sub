@@ -226,23 +226,24 @@ document.addEventListener('DOMContentLoaded', function() {
             if (result.subtitleSettings) {
                 const settings = result.subtitleSettings;
                 
-                // 加载通用设置
-                fontSizeSlider.value = settings.fontSize || 20;
-                opacitySlider.value = settings.opacity || 1;
-                offsetYSlider.value = settings.offsetY || 0;
-                
+                // 用 ?? 而不是 ||：透明度、描边宽度、内边距、垂直偏移都允许为 0，
+                // 而 0 是 falsy，用 || 会把用户存的 0 错误地换成默认值。
+                fontSizeSlider.value = settings.fontSize ?? 20;
+                opacitySlider.value = settings.opacity ?? 1;
+                offsetYSlider.value = settings.offsetY ?? 0;
+
                 // 加载SRT专用设置
-                srtFontFamily.value = settings.srtFontFamily || 'Microsoft YaHei, SimHei, Arial, sans-serif';
-                srtFontWeight.value = settings.srtFontWeight || 'normal';
-                srtFontStyle.value = settings.srtFontStyle || 'normal';
-                srtTextAlign.value = settings.srtTextAlign || 'center';
-                srtTextColor.value = settings.srtTextColor || '#ffffff';
-                srtOutlineColor.value = settings.srtOutlineColor || '#000000';
-                srtOutlineWidth.value = settings.srtOutlineWidth || 1;
-                srtBackgroundColor.value = settings.srtBackgroundColor || '#000000';
-                srtBackgroundOpacity.value = settings.srtBackgroundOpacity || 0.7;
-                srtLineHeight.value = settings.srtLineHeight || 1.2;
-                srtPadding.value = settings.srtPadding || 8;
+                srtFontFamily.value = settings.srtFontFamily ?? 'Microsoft YaHei, SimHei, Arial, sans-serif';
+                srtFontWeight.value = settings.srtFontWeight ?? 'normal';
+                srtFontStyle.value = settings.srtFontStyle ?? 'normal';
+                srtTextAlign.value = settings.srtTextAlign ?? 'center';
+                srtTextColor.value = settings.srtTextColor ?? '#ffffff';
+                srtOutlineColor.value = settings.srtOutlineColor ?? '#000000';
+                srtOutlineWidth.value = settings.srtOutlineWidth ?? 1;
+                srtBackgroundColor.value = settings.srtBackgroundColor ?? '#000000';
+                srtBackgroundOpacity.value = settings.srtBackgroundOpacity ?? 0.7;
+                srtLineHeight.value = settings.srtLineHeight ?? 1.2;
+                srtPadding.value = settings.srtPadding ?? 8;
                 
                 updateColorPreviews();
             }
