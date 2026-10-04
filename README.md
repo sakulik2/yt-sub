@@ -19,16 +19,25 @@ The extension ships no runtime dependencies, so there is no build step required.
 ### Method 2: Build a clean directory
 
 Useful if you want a folder containing only the files the extension actually
-ships:
+ships. On Windows (PowerShell 5.1 or 7):
 
-```bash
-chmod +x build.sh
-./build.sh
+```powershell
+powershell -ExecutionPolicy Bypass -File .uild.ps1
 ```
 
-This copies `manifest.json`, `popup.html`, `popup.js`, `content.js`, and
-`ass-loader.js` into `yt-sub-build/`. Load that directory via **Load unpacked**
-as described above.
+On macOS, Linux, or Git Bash:
+
+```bash
+bash build.sh
+```
+
+Both copy `manifest.json`, `popup.html`, `popup.js`, `content.js`,
+`ass-loader.js`, and `ass-loader.LICENSE` into `yt-sub-build/`. Load that
+directory via **Load unpacked** as described above.
+
+Add `-Zip` (PowerShell) or `--zip` (bash, needs the `zip` command) to also
+produce `yt-sub-<version>.zip` for uploading to the Chrome Web Store. The zip is
+ignored by git.
 
 ## Usage
 

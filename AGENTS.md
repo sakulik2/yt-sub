@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-The extension itself ships no dependencies. `manifest.json` defines permissions and entry points. `content.js` injects subtitle playback into YouTube; `popup.html` and `popup.js` implement the extension UI. There is no background service worker — MV3 does not require one, and `action.onClicked` never fires while `default_popup` is set. `ass-loader.js` is a vendored copy of the official ASS.js non-module build (`dist/ass.global.js`), with its MIT license in `ass-loader.LICENSE`; `build.sh` assembles an unpacked build. `package.json` and `node_modules` exist only for dev tooling (ESLint, and assjs for vendoring) and are never shipped; `scripts/` holds dev-only Node scripts. The ignored `yt-sub/` and `yt-sub-build/` directories are local build or backup output, not source.
+The extension itself ships no dependencies. `manifest.json` defines permissions and entry points. `content.js` injects subtitle playback into YouTube; `popup.html` and `popup.js` implement the extension UI. There is no background service worker — MV3 does not require one, and `action.onClicked` never fires while `default_popup` is set. `ass-loader.js` is a vendored copy of the official ASS.js non-module build (`dist/ass.global.js`), with its MIT license in `ass-loader.LICENSE`; `build.ps1` (Windows) and `build.sh` (Unix-like shells) assemble an unpacked build and must stay in sync. `package.json` and `node_modules` exist only for dev tooling (ESLint, and assjs for vendoring) and are never shipped; `scripts/` holds dev-only Node scripts. The ignored `yt-sub/` and `yt-sub-build/` directories are local build or backup output, not source.
 
 ## Build, Test, and Development Commands
 
@@ -10,7 +10,7 @@ The extension itself ships no dependencies. `manifest.json` defines permissions 
 - Run `npm run check` for JavaScript syntax checks (`node --check` on `content.js` and `popup.js`).
 - Run `npm run lint` for ESLint. Requires `npm install` once; the dev dependencies are never shipped.
 - To change the ASS.js version, edit the pinned `assjs` devDependency in `package.json`, then run `npm install && npm run vendor`. This overwrites `ass-loader.js` and `ass-loader.LICENSE`; inspect the diff.
-- Run `bash build.sh` on a Unix-like shell to create `yt-sub-build/`.
+- Run `.uild.ps1` on Windows or `bash build.sh` elsewhere to create `yt-sub-build/`; add `-Zip` / `--zip` for a store-ready `yt-sub-<version>.zip`. Keep the two scripts' file lists and behavior identical.
 
 ## Coding Style & Naming Conventions
 

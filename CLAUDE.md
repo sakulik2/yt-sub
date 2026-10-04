@@ -29,6 +29,7 @@ Chrome Manifest V3 扩展，给 YouTube 视频叠加 ASS/SRT 字幕。**扩展�
 - assjs 的 `resize` 是私有字段 `#resize`，实例上没有公开 `resize()`。库在构造时自己装了 `ResizeObserver`，尺寸变化已有人管。
 - 扩展里手写的 JS 只有 `content.js` 和 `popup.js`；`scripts/` 下是不随扩展发布的开发脚本。没有 background service worker —— MV3 不强制要求，且设了 `default_popup` 时 `action.onClicked` 永远不触发，所有逻辑都在 popup 和 content script 里。
 - `yt-sub/`、`yt-sub-build/` 是本地构建或备份输出，不是源码。
+- 打包脚本有两份：`build.ps1`（Windows）和 `build.sh`（Unix shell），文件列表和行为必须保持一致，改一个要同步改另一个。新增随扩展发布的文件时两边的列表都要加。`build.ps1` 含中文，必须保存为带 BOM 的 UTF-8，否则 Windows PowerShell 5.1 会乱码。
 
 ## 代码风格
 

@@ -30,7 +30,7 @@ npm run check && npm run lint
 - **全屏切换** — 进出全屏，字幕位置和缩放跟随视频。
 - **设置持久化** — 调整弹窗里的设置，关闭再打开弹窗，值保持；刷新页面后仍生效。
 - **注入防护** — 用含 `<script>`、HTML 标签和特殊字符的字幕文件测试，这些内容应当只作为纯文本显示。
-- **构建产物** — 若改了 `build.sh`，从构建目录用「加载已解压的扩展程序」验证无缺失资源。
+- **构建产物** — 若改了 `build.ps1`、`build.sh` 或新增了发布文件，跑 `.uild.ps1`（Windows）或 `bash build.sh`，从 `yt-sub-build/` 用「加载已解压的扩展程序」验证无缺失资源。
 - **ASS 库升级** — 若改了 `ass-loader.js`，控制台输入 `typeof ASS` 应为 `"function"`（在 content script 上下文里），再加载一个含 `\move`、`BorderStyle=3` 方框背景和多 layer 的 ASS，16:9 和非 16:9 视频各看一遍。
 
 最后提醒用户查看浏览器控制台（观看页的 content script 上下文，以及弹窗右键「检查」打开的 popup 控制台）。
