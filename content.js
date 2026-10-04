@@ -9,20 +9,10 @@ class YouTubeSubtitlePlayer {
         this.currentSubtitleType = null;
         this.animationFrame = null;
 
-        // 生命周期状态：这些字段保证监听器只注册一次，避免 SPA 跳转时堆积
-        this.routeObserver = null;   // 路由变化观察器，全局只建一个
+        // 生命周期状态
         this.pollTimer = null;       // 等待 video 元素的轮询计时器
-        this.boundVideo = null;      // 当前已绑定事件的 video 元素
+        this.currentVideoId = null;  // 当前观看页的视频 ID，用于判断导航后是否换了视频
         this.lastSRTText = null;     // 上一帧渲染的 SRT 文本，用于跳过重复渲染
-
-        // 事件处理器保存成实例字段，才能在 removeEventListener 时传入同一引用
-        this.onVideoResize = () => this.applySettings();
-        this.onFullscreenChange = () => {
-            // 全屏切换后容器尺寸更新有延迟，补两拍
-            setTimeout(this.onVideoResize, 100);
-            setTimeout(this.onVideoResize, 500);
-        };
-
 
         this.settings = {
             fontSize: 20,
@@ -55,11 +45,10 @@ class YouTubeSubtitlePlayer {
             console.warn("⚠️ window.ASS 尚未就绪，将在使用时再次检查");
         }
 
-        this.waitForVideo();
+        // 从首页等非观看页进入时不轮询，等 yt-navigate-finish 进入观看页再找 video
+        this.currentVideoId = this.getVideoId();
+        if (this.currentVideoId) this.waitForVideo();
         this.watchRouteChanges();  // 只在初始化时注册一次
-
-        // 全屏事件绑在 document 上，与具体 video 元素无关，注册一次即可
-        document.addEventListener('fullscreenchange', this.onFullscreenChange);
 
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             // 必须返回 true 以支持异步 sendResponse
@@ -70,23 +59,26 @@ class YouTubeSubtitlePlayer {
         this.loadSettings();
     }
 
-    // 路由监听（处理 YouTube 的 SPA 页面内跳转）。
-    // YouTube 切视频不重新加载文档，content script 不会重新注入，
-    // 所以要自己观察 URL 变化。这个 observer 全局只建一个。
-    watchRouteChanges() {
-        if (this.routeObserver) return;
+    // 观看页返回视频 ID，其他页面返回 null
+    getVideoId() {
+        if (location.pathname !== '/watch') return null;
+        return new URLSearchParams(location.search).get('v');
+    }
 
-        let currentUrl = location.href;
-        this.routeObserver = new MutationObserver(() => {
-            if (location.href === currentUrl) return;
-            currentUrl = location.href;
-            if (currentUrl.includes('/watch')) {
-                // 换视频了，旧字幕和旧 ASS 实例必须先释放
-                this.clearSubtitle();
-                setTimeout(() => this.waitForVideo(), 1000);
-            }
+    // 路由监听（处理 YouTube 的 SPA 页面内跳转）。
+    // YouTube 切视频不重新加载文档，content script 不会重新注入。
+    // yt-navigate-finish 是 YouTube 每次页内导航完成后在 document 上派发的事件，
+    // 比对整个 document 做 subtree MutationObserver 便宜得多。
+    watchRouteChanges() {
+        document.addEventListener('yt-navigate-finish', () => {
+            // 离开观看页时不清理：视频会继续在迷你播放器里播放，字幕仍然对得上。
+            // 只有进入另一个视频时，旧字幕和旧 ASS 实例才必须释放。
+            const videoId = this.getVideoId();
+            if (!videoId || videoId === this.currentVideoId) return;
+            this.currentVideoId = videoId;
+            this.clearSubtitle();
+            this.waitForVideo();
         });
-        this.routeObserver.observe(document, { subtree: true, childList: true });
     }
 
     waitForVideo() {
@@ -103,7 +95,6 @@ class YouTubeSubtitlePlayer {
             if (this.video && playerContainer) {
                 this.pollTimer = null;
                 this.setupContainer(playerContainer);
-                this.setupVideoEventListeners();
             } else {
                 this.pollTimer = setTimeout(checkVideo, 1000);
             }
@@ -197,21 +188,8 @@ class YouTubeSubtitlePlayer {
         }
     }
 
-    // ASS 库自己在构造时装了 ResizeObserver，尺寸变化由它负责（resize 是私有字段 #resize，
-    // 实例上没有公开方法可调）。这里只需要重算依赖窗口高度的 SRT 位置。
-    setupVideoEventListeners() {
-        if (!this.video) return;
-        if (this.boundVideo === this.video) return;  // 同一元素不重复绑定
-
-        // 切视频后 video 元素可能被替换，先从旧元素上摘掉监听器
-        if (this.boundVideo) {
-            this.boundVideo.removeEventListener('resize', this.onVideoResize);
-        }
-
-        this.video.addEventListener('resize', this.onVideoResize);
-        this.boundVideo = this.video;
-    }
-
+    // 尺寸变化不需要手动处理：ASS 库构造时自己装了 ResizeObserver，
+    // SRT 的位置用 calc() 相对容器计算，容器尺寸变化时浏览器自动重排。
     applySettings() {
         if (!this.container) return;
         
@@ -226,7 +204,9 @@ class YouTubeSubtitlePlayer {
             const s = this.srtContainer.style;
             s.fontSize = this.settings.fontSize + 'px';
             s.opacity = this.settings.opacity;
-            s.bottom = (10 - (this.settings.offsetY / window.innerHeight * 100)) + '%';
+            // 正值向下，与 ASS 的 translateY 方向一致。bottom 的百分比相对播放器容器，
+            // 不能用 window.innerHeight 换算像素。
+            s.bottom = `calc(10% - ${this.settings.offsetY}px)`;
             s.textAlign = this.settings.srtTextAlign;
             this.addSRTStyles();
         }
@@ -290,36 +270,45 @@ class YouTubeSubtitlePlayer {
     }
 
     parseSRT(content) {
+        // 兼容常见的非标准写法：小时一位、毫秒用点号或不足三位、缺少序号行。
+        const timePattern = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
         const subtitles = [];
         const blocks = content.trim().split(/\n\s*\n/);
         for (const block of blocks) {
             const lines = block.trim().split('\n');
-            if (lines.length < 3) continue;
-            const timeMatch = lines[1].match(/(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})/);
-            if (!timeMatch) continue;
+            const timeIndex = lines.findIndex(line => timePattern.test(line));
+            if (timeIndex === -1) continue;
+            const timeMatch = lines[timeIndex].match(timePattern);
+            const text = lines.slice(timeIndex + 1).join('\n').replace(/<[^>]*>|\{[^}]*\}/g, '');
+            if (!text.trim()) continue;
             subtitles.push({
                 startTime: this.timeToSeconds(timeMatch[1], timeMatch[2], timeMatch[3], timeMatch[4]),
                 endTime: this.timeToSeconds(timeMatch[5], timeMatch[6], timeMatch[7], timeMatch[8]),
-                text: lines.slice(2).join('\n').replace(/<[^>]*>|\{[^}]*\}/g, '')
+                text
             });
         }
         return subtitles;
     }
-    
-    timeToSeconds(h, m, s, ms) { return parseInt(h)*3600 + parseInt(m)*60 + parseInt(s) + parseInt(ms)/1000; }
-    
+
+    // 毫秒部分按小数处理，",5" 是 0.5 秒而不是 5 毫秒
+    timeToSeconds(h, m, s, frac) { return parseInt(h)*3600 + parseInt(m)*60 + parseInt(s) + parseFloat('0.' + frac); }
+
     startSRTUpdate() {
         const updateSRT = () => {
             if (!this.video || !this.srtSubtitles || this.currentSubtitleType !== 'srt') return;
             const t = this.video.currentTime;
-            const sub = this.srtSubtitles.find(s => t >= s.startTime && t <= s.endTime);
+            // 时间重叠的条目（比如双语字幕分成两条）要一起显示，不能只取第一条
+            const text = this.srtSubtitles
+                .filter(s => t >= s.startTime && t <= s.endTime)
+                .map(s => s.text)
+                .join('\n');
 
-            if (sub) {
+            if (text) {
                 // 只在文本变化时重建 DOM。这个回调每帧都跑，无条件重建会白白产生
                 // 每秒 60 次的 DOM 操作。
-                if (sub.text !== this.lastSRTText) {
-                    this.renderSRTLines(sub.text);
-                    this.lastSRTText = sub.text;
+                if (text !== this.lastSRTText) {
+                    this.renderSRTLines(text);
+                    this.lastSRTText = text;
                 }
                 this.srtContainer.style.display = 'block';
             } else {

@@ -23,13 +23,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const srtLineHeight = document.getElementById('srtLineHeight');
     const srtPadding = document.getElementById('srtPadding');
     
-    // 设置分组
-    const commonSettings = document.getElementById('commonSettings');
+    // SRT 设置分组，只在加载了 SRT 时显示
     const srtSettings = document.getElementById('srtSettings');
-    
-    // 当前字幕类型
-    let currentSubtitleType = null;
-    
+
+    // 给当前标签页的 content script 发消息。非 YouTube 页面没有接收方，
+    // 必须读一下 chrome.runtime.lastError，否则控制台会报 "Unchecked runtime.lastError"。
+    // 连接失败时 callback 收到 null。
+    function sendToActiveTab(message, callback) {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            if (!tabs[0]) {
+                if (callback) callback(null);
+                return;
+            }
+            chrome.tabs.sendMessage(tabs[0].id, message, function(response) {
+                if (chrome.runtime.lastError) response = null;
+                if (callback) callback(response);
+            });
+        });
+    }
+
     // 加载保存的设置
     loadSettings();
     
@@ -65,22 +77,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 // 发送字幕内容到content script
-                chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                    chrome.tabs.sendMessage(tabs[0].id, {
-                        action: 'loadSubtitle',
-                        content: content,
-                        fileName: file.name,
-                        type: fileType
-                    }, function(response) {
-                        if (chrome.runtime.lastError) {
-                            showStatus('无法连接到YouTube页面，请刷新页面后重试', 'error');
-                        } else if (response && response.success) {
-                            showStatus(`${fileType.toUpperCase()}字幕加载成功！`, 'success');
-                            updateUIForSubtitleType(fileType);
-                        } else {
-                            showStatus(response?.error || '字幕加载失败，请检查文件格式', 'error');
-                        }
-                    });
+                sendToActiveTab({
+                    action: 'loadSubtitle',
+                    content: content,
+                    fileName: file.name,
+                    type: fileType
+                }, function(response) {
+                    if (!response) {
+                        showStatus('无法连接到YouTube页面，请刷新页面后重试', 'error');
+                    } else if (response.success) {
+                        showStatus(`${fileType.toUpperCase()}字幕加载成功！`, 'success');
+                        updateUIForSubtitleType(fileType);
+                    } else {
+                        showStatus(response.error || '字幕加载失败，请检查文件格式', 'error');
+                    }
                 });
             } catch (error) {
                 showStatus('文件格式处理失败: ' + error.message, 'error');
@@ -110,16 +120,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     clearBtn.addEventListener('click', function() {
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {
-                action: 'clearSubtitle'
-            }, function(response) {
-                if (response && response.success) {
-                    showStatus('字幕已清除', 'success');
-                    fileInput.value = '';
-                    updateUIForSubtitleType(null);
-                }
-            });
+        sendToActiveTab({ action: 'clearSubtitle' }, function(response) {
+            if (response && response.success) {
+                showStatus('字幕已清除', 'success');
+                fileInput.value = '';
+                updateUIForSubtitleType(null);
+            } else {
+                showStatus('无法连接到YouTube页面，请刷新页面后重试', 'error');
+            }
         });
     });
     
@@ -173,17 +181,10 @@ document.addEventListener('DOMContentLoaded', function() {
         chrome.storage.local.set({subtitleSettings: settings});
         
         // 发送设置更新
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {
-                action: 'updateSettings',
-                settings: settings
-            });
-        });
+        sendToActiveTab({ action: 'updateSettings', settings: settings });
     }
     
     function updateUIForSubtitleType(type) {
-        currentSubtitleType = type;
-        
         if (type) {
             subtitleTypeIndicator.textContent = type.toUpperCase();
             subtitleTypeIndicator.className = `subtitle-type-indicator ${type}`;
@@ -256,14 +257,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // 检查当前是否有加载的字幕
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {
-                action: 'getSubtitleStatus'
-            }, function(response) {
-                if (response && response.type) {
-                    updateUIForSubtitleType(response.type);
-                }
-            });
+        sendToActiveTab({ action: 'getSubtitleStatus' }, function(response) {
+            if (response && response.type) {
+                updateUIForSubtitleType(response.type);
+            }
         });
     }
     
@@ -321,16 +318,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
         }
         
-        // 修复可能的时间格式问题
-        processedContent = processedContent.replace(
-            /Dialogue: (\d+),(\d{1,2}):(\d{2}):(\d{2})\.(\d{2}),(\d{1,2}):(\d{2}):(\d{2})\.(\d{2}),/g,
-            function(match, layer, h1, m1, s1, ms1, h2, m2, s2, ms2) {
-                const start = `${h1.padStart(1, '0')}:${m1.padStart(2, '0')}:${s1.padStart(2, '0')}.${ms1.padStart(2, '0')}`;
-                const end = `${h2.padStart(1, '0')}:${m2.padStart(2, '0')}:${s2.padStart(2, '0')}.${ms2.padStart(2, '0')}`;
-                return `Dialogue: ${layer},${start},${end},`;
-            }
-        );
-        
         console.log('Processed content length:', processedContent.length);
         return processedContent;
     }
@@ -349,7 +336,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         
         // 基本SRT格式验证
-        const srtPattern = /\d+\n\d{2}:\d{2}:\d{2},\d{3} --> \d{2}:\d{2}:\d{2},\d{3}/;
+        // 与 content.js 的 parseSRT 保持同样宽松：小时一位、毫秒用点号、缺序号行都接受
+        const srtPattern = /\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}\s*-->\s*\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}/;
         if (!srtPattern.test(content)) {
             throw new Error('文件不是有效的SRT格式：缺少时间戳标识');
         }
