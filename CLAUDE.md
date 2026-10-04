@@ -20,7 +20,7 @@ Chrome Manifest V3 扩展，给 YouTube 视频叠加 ASS/SRT 字幕。**扩展�
 ## 版本号与提交
 
 - 每次影响行为的改动都递增 `manifest.json` 的 `version`（patch 位），保持与提交一致。
-- 提交信息用 `Update to vX.Y.Z` 这类简短祈使句主题，与现有历史风格一致。
+- 提交信息用 Conventional Commits 格式：`<type>(<scope>): <subject>`，type 取 `feat`/`fix`/`refactor`/`docs`/`chore`/`build` 等，scope 可选（如 `content`、`popup`、`build`），subject 用简短祈使句。版本递增写在正文里，如 `Bump version to 1.3.4`。早于 v1.3.4 的历史是 `Update to vX.Y.Z` 旧格式，不要改写。
 - 完成一处逻辑完整的修改并通过上述语法检查后，直接 `git add` 本次涉及的文件并提交，不用逐次询问。只 stage 相关文件，不要 `git add .`。
 - 不要提交 `*.pem`、`*.crx`、`*.zip` 或被 ignore 的构建目录。
 
