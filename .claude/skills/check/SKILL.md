@@ -1,6 +1,6 @@
 ---
 name: check
-description: 跑本仓库的语法检查（node --check + py_compile），然后输出本次改动对应的 YouTube 手测清单。在改完扩展代码、准备提交或交给用户验证前使用。
+description: 跑本仓库的语法检查（node --check + ESLint），然后输出本次改动对应的 YouTube 手测清单。在改完扩展代码、准备提交或交给用户验证前使用。
 ---
 
 本仓库没有测试框架，浏览器行为无法自动验证。这个 skill 做两件事：跑能自动化的检查，然后把不能自动化的部分整理成用户可执行的清单。
@@ -11,17 +11,11 @@ description: 跑本仓库的语法检查（node --check + py_compile），然后
 npm run check && npm run lint
 ```
 
-`npm run check` 是三个手写 JS 的 `node --check`；`npm run lint` 是 ESLint（配置在 `eslint.config.js`）。ESLint 能抓 `node --check` 抓不到的未定义变量和笔误的 chrome API 名。已知有 4 条 `popup.js` 的 unused-vars warning 属于既存问题，不是你引入的。
-
-如果本次改动碰了 Python 文件，追加：
-
-```bash
-python -m py_compile build.py
-```
+`npm run check` 是两个手写 JS 的 `node --check`；`npm run lint` 是 ESLint（配置在 `eslint.config.js`）。ESLint 能抓 `node --check` 抓不到的未定义变量和笔误的 chrome API 名。当前基线是 0 warning，出现任何 warning 都是本次改动引入的。
 
 有报错先修掉再继续。不要跳过这一步直接写手测清单。
 
-不要对 `ass-loader.js` 跑检查或做修改 —— 它是 `build.py` 生成的 vendored 产物，体积大且含私有字段语法。
+不要对 `ass-loader.js` 跑检查或做修改 —— 它是 `npm run vendor` 从 assjs 官方构建复制来的 vendored 产物，体积大且含私有字段语法。
 
 ## 2. 手测清单
 
@@ -37,8 +31,9 @@ python -m py_compile build.py
 - **设置持久化** — 调整弹窗里的设置，关闭再打开弹窗，值保持；刷新页面后仍生效。
 - **注入防护** — 用含 `<script>`、HTML 标签和特殊字符的字幕文件测试，这些内容应当只作为纯文本显示。
 - **构建产物** — 若改了 `build.sh`，从构建目录用「加载已解压的扩展程序」验证无缺失资源。
+- **ASS 库升级** — 若改了 `ass-loader.js`，控制台输入 `typeof ASS` 应为 `"function"`（在 content script 上下文里），再加载一个含 `\move`、`BorderStyle=3` 方框背景和多 layer 的 ASS，16:9 和非 16:9 视频各看一遍。
 
-最后提醒用户查看浏览器控制台（观看页的 content script 上下文，以及 `chrome://extensions` 里 service worker 的日志）。
+最后提醒用户查看浏览器控制台（观看页的 content script 上下文，以及弹窗右键「检查」打开的 popup 控制台）。
 
 ## 3. 提交
 

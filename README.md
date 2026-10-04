@@ -56,18 +56,23 @@ own font sizes.
 
 ## Development
 
-`ass-loader.js` is a vendored copy of ASS.js, patched to attach the library to
-`window` instead of using ES module exports. It is generated — do not edit it by
-hand. To refresh it against the current upstream release:
+`ass-loader.js` is a vendored copy of the official non-module build of
+[ASS.js](https://github.com/weizhenye/ASS) (`dist/ass.global.js`), which defines a
+global `ASS`. It is generated — do not edit it by hand. Its MIT license is kept
+next to it in `ass-loader.LICENSE`.
+
+The version is pinned in `package.json`. To change it, edit the `assjs`
+version there, then:
 
 ```bash
-python build.py
+npm install
+npm run vendor   # copies node_modules/assjs into ass-loader.js
 ```
 
-This requires network access and overwrites the file, so review the diff.
+Review the resulting diff before committing.
 
-Development tooling (ESLint) lives in `package.json` and is never shipped with
-the extension:
+Development tooling (ESLint, assjs for vendoring) lives in `package.json` and is
+never shipped with the extension:
 
 ```bash
 npm install

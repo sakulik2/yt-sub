@@ -1,13 +1,15 @@
 {
   "name": "yt-sub",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "private": true,
   "description": "Dev tooling only. The extension itself ships no dependencies.",
   "scripts": {
-    "lint": "eslint content.js popup.js",
-    "check": "node --check content.js && node --check popup.js"
+    "lint": "eslint content.js popup.js scripts eslint.config.js .claude/hooks",
+    "check": "node --check content.js && node --check popup.js",
+    "vendor": "node scripts/vendor-assjs.js"
   },
   "devDependencies": {
+    "assjs": "0.1.4",
     "eslint": "9.39.1",
     "globals": "16.5.0"
   }

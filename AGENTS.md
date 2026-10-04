@@ -2,20 +2,19 @@
 
 ## Project Structure & Module Organization
 
-The extension itself ships no dependencies. `manifest.json` defines permissions and entry points. `content.js` injects subtitle playback into YouTube; `popup.html` and `popup.js` implement the extension UI. There is no background service worker — MV3 does not require one, and `action.onClicked` never fires while `default_popup` is set. `ass-loader.js` is a vendored, generated ASS.js asset that `build.py` downloads and patches, while `build.sh` assembles an unpacked build. `package.json` and `node_modules` exist only for ESLint and are never shipped. The ignored `yt-sub/` and `yt-sub-build/` directories are local build or backup output, not source.
+The extension itself ships no dependencies. `manifest.json` defines permissions and entry points. `content.js` injects subtitle playback into YouTube; `popup.html` and `popup.js` implement the extension UI. There is no background service worker — MV3 does not require one, and `action.onClicked` never fires while `default_popup` is set. `ass-loader.js` is a vendored copy of the official ASS.js non-module build (`dist/ass.global.js`), with its MIT license in `ass-loader.LICENSE`; `build.sh` assembles an unpacked build. `package.json` and `node_modules` exist only for dev tooling (ESLint, and assjs for vendoring) and are never shipped; `scripts/` holds dev-only Node scripts. The ignored `yt-sub/` and `yt-sub-build/` directories are local build or backup output, not source.
 
 ## Build, Test, and Development Commands
 
 - Load the repository root through `chrome://extensions` using **Developer mode > Load unpacked** for local development.
 - Run `npm run check` for JavaScript syntax checks (`node --check` on `content.js` and `popup.js`).
 - Run `npm run lint` for ESLint. Requires `npm install` once; the dev dependencies are never shipped.
-- Run `python -m py_compile build.py` to validate the Python utility.
-- Run `python build.py` to refresh `ass-loader.js`. It requires network access and overwrites the vendored file; inspect the diff.
+- To change the ASS.js version, edit the pinned `assjs` devDependency in `package.json`, then run `npm install && npm run vendor`. This overwrites `ass-loader.js` and `ass-loader.LICENSE`; inspect the diff.
 - Run `bash build.sh` on a Unix-like shell to create `yt-sub-build/`.
 
 ## Coding Style & Naming Conventions
 
-Follow existing plain JavaScript, HTML, CSS, and Python conventions; do not introduce a bundler or dependency for a small change. Use four-space indentation, semicolons in JavaScript, `camelCase` for functions and variables, `PascalCase` for classes, and `UPPER_SNAKE_CASE` for Python constants. Keep Chrome message action names descriptive, such as `loadSubtitle` or `updateSettings`. ESLint checks for static errors only and no formatter is configured, so preserve nearby style.
+Follow existing plain JavaScript, HTML, and CSS conventions; do not introduce a bundler or dependency for a small change. Use four-space indentation, semicolons in JavaScript, `camelCase` for functions and variables, `PascalCase` for classes, and `UPPER_SNAKE_CASE` for module-level constants. Keep Chrome message action names descriptive, such as `loadSubtitle` or `updateSettings`. ESLint checks for static errors only and no formatter is configured, so preserve nearby style.
 
 ## Testing Guidelines
 
