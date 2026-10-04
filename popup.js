@@ -54,9 +54,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const reader = new FileReader();
         reader.onload = function(e) {
-            let content = e.target.result;
-            
             try {
+                let content = decodeSubtitle(e.target.result);
+
                 // 处理可能的编码问题
                 if (fileType === 'ass') {
                     content = processASSContent(content, file.name);
@@ -91,17 +91,23 @@ document.addEventListener('DOMContentLoaded', function() {
             showStatus('文件读取失败', 'error');
         };
         
-        // 尝试多种编码方式读取
-        try {
-            reader.readAsText(file, 'UTF-8');
-        } catch (error) {
-            try {
-                reader.readAsText(file, 'GB2312');
-            } catch (error2) {
-                reader.readAsText(file);
-            }
-        }
+        // 读原始字节，由 decodeSubtitle 判断编码。readAsText 遇到非法字节不会抛错，
+        // 只会替换成 U+FFFD，所以没法靠 try/catch 回退到其他编码。
+        reader.readAsArrayBuffer(file);
     });
+
+    // 按 BOM 判断 UTF-8/UTF-16；无 BOM 时先严格按 UTF-8 解码，失败则按 GB18030
+    // （GBK 的超集，覆盖中文字幕组常见的 ANSI 编码）。
+    function decodeSubtitle(buffer) {
+        const bytes = new Uint8Array(buffer);
+        if (bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(bytes);
+        if (bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(bytes);
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        } catch {
+            return new TextDecoder('gb18030').decode(bytes);
+        }
+    }
     
     clearBtn.addEventListener('click', function() {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {

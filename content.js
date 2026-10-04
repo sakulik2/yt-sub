@@ -173,18 +173,21 @@ class YouTubeSubtitlePlayer {
 
         const assConfig = {
             container: this.container, // 渲染目标
-            resampling: 'video_height', // 保持清晰度
-            // 字体回退
-            fallbackFont: 'Microsoft YaHei, sans-serif'
+            resampling: 'video_height' // 保持清晰度
         };
-        
+
         try {
             // 初始化
             this.assInstance = new window.ASS(assContent, this.video, assConfig);
             this.currentSubtitleType = 'ass';
-            
-            // 打印实例看看它到底有什么方法
-            console.log("ASS 实例创建成功:", this.assInstance);
+            console.log("ASS 实例创建成功");
+
+            // assjs 只在 play/playing 事件里启动逐帧渲染，构造时只渲染当前一帧。
+            // 视频正在播放时加载，后续字幕会停住，直到用户暂停再播放。
+            // 库没有公开的 play()，所以补发一个 playing 事件让它的监听器启动。
+            if (!this.video.paused) {
+                this.video.dispatchEvent(new Event('playing'));
+            }
 
             this.applySettings();
             return true;
@@ -256,8 +259,13 @@ class YouTubeSubtitlePlayer {
 
         this.currentSubtitleType = null;
 
-        // 清理容器内容但保留容器本身
-        if (this.container) this.container.replaceChildren();
+        // 清理容器内容但保留容器本身。ASS 模式把透明度和位移设在容器上，
+        // 不复位的话切到 SRT 后会和 SRT 自己的透明度、偏移叠加。
+        if (this.container) {
+            this.container.replaceChildren();
+            this.container.style.opacity = '';
+            this.container.style.transform = '';
+        }
 
         const s = document.getElementById('srt-subtitle-styles');
         if (s) s.remove();
