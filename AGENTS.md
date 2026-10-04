@@ -15,7 +15,7 @@ The extension itself ships no dependencies. `manifest.json` defines permissions 
 
 ## Coding Style & Naming Conventions
 
-Follow existing plain JavaScript, HTML, CSS, and Python conventions; do not introduce a bundler or dependency for a small change. Use four-space indentation, semicolons in JavaScript, `camelCase` for functions and variables, `PascalCase` for classes, and `UPPER_SNAKE_CASE` for Python constants. Keep Chrome message action names descriptive, such as `loadSubtitle` or `updateSettings`. No formatter or linter is configured, so preserve nearby style.
+Follow existing plain JavaScript, HTML, CSS, and Python conventions; do not introduce a bundler or dependency for a small change. Use four-space indentation, semicolons in JavaScript, `camelCase` for functions and variables, `PascalCase` for classes, and `UPPER_SNAKE_CASE` for Python constants. Keep Chrome message action names descriptive, such as `loadSubtitle` or `updateSettings`. ESLint checks for static errors only and no formatter is configured, so preserve nearby style.
 
 ## Testing Guidelines
 

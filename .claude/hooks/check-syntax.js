@@ -1,5 +1,5 @@
 // PostToolUse hook: 对刚被 Write/Edit 修改的 .js 文件跑 `node --check`。
-// 本仓库没有 formatter 或 linter，语法检查是最快的自动反馈。
+// 语法检查是最快的自动反馈；ESLint 较慢，留给 `npm run lint` 手动跑。
 // 读取 stdin 上的 hook JSON payload，语法出错时以 decision:block 把错误回传给模型。
 
 const { execFileSync } = require('child_process');
