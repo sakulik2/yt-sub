@@ -40,9 +40,9 @@ class YouTubeSubtitlePlayer {
         
         // 检查全局 ASS 变量
         if (window.ASS) {
-            console.log("✅ 检测到全局 ASS 库 (window.ASS)");
+            console.log("检测到全局 ASS 库 (window.ASS)");
         } else {
-            console.warn("⚠️ window.ASS 尚未就绪，将在使用时再次检查");
+            console.warn("window.ASS 尚未就绪，将在使用时再次检查");
         }
 
         // 从首页等非观看页进入时不轮询，等 yt-navigate-finish 进入观看页再找 video
